@@ -3,7 +3,6 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import Image from "next/image";
 import { mockPostsExtended } from "@/data/mock";
-import TabBar from "@/components/TabBar";
 import type { Post } from "@/data/mock";
 
 const ratingEmoji = { love: "😍", good: "🙂", okay: "😐" };
@@ -85,7 +84,6 @@ export default function MapPage() {
         </div>
       )}
 
-      <TabBar />
     </div>
   );
 }

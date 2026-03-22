@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Search } from "lucide-react";
 import Image from "next/image";
 import { mockPostsExtended } from "@/data/mock";
-import TabBar from "@/components/TabBar";
 
 const categories = ["전체", "한식", "양식", "일식", "카페", "술집", "분식", "디저트"];
 
@@ -65,7 +64,6 @@ export default function DiscoverPage() {
         ))}
       </div>
 
-      <TabBar />
     </div>
   );
 }

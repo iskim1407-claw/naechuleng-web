@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Camera, MapPin, Navigation, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/store/useStore";
-import TabBar from "@/components/TabBar";
 
 const ratings = [
   { value: "okay" as const, emoji: "😐", label: "괜찮아" },
@@ -116,7 +115,6 @@ export default function CreatePage() {
         </button>
       </div>
 
-      <TabBar />
     </div>
   );
 }

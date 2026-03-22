@@ -1,7 +1,6 @@
 "use client";
 import Image from "next/image";
 import { mockUser, mockPostsExtended } from "@/data/mock";
-import TabBar from "@/components/TabBar";
 
 export default function ProfilePage() {
   const userPosts = mockPostsExtended.slice(0, 6);
@@ -63,7 +62,6 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <TabBar />
     </div>
   );
 }

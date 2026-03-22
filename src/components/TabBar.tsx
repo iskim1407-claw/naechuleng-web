@@ -8,49 +8,39 @@ const tabs = [
   { href: "/map", icon: MapPin, label: "지도" },
   { href: "/create", icon: null, label: "" },
   { href: "/discover", icon: Search, label: "발견" },
-  { href: "/profile", icon: User, label: "프로필" },
+  { href: "/profile", icon: User, label: "MY" },
 ];
 
 export default function TabBar() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] h-[82px] bg-white/80 backdrop-blur-xl border-t border-gray-100 flex items-start pt-2 px-4 safe-bottom z-50">
-      {tabs.map((tab) => {
-        if (!tab.icon) {
+    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] bg-white border-t border-gray-200/60 z-50">
+      <div className="flex items-end h-[56px] px-2">
+        {tabs.map((tab) => {
+          if (!tab.icon) {
+            return (
+              <Link key={tab.href} href={tab.href} className="flex-1 flex justify-center -mb-1">
+                <div className="w-[48px] h-[48px] bg-gradient-to-br from-[#FF6B35] to-[#FF8F65] rounded-2xl flex items-center justify-center shadow-[0_4px_12px_rgba(255,107,53,0.4)] active:scale-90 transition-transform duration-150">
+                  <Plus size={24} strokeWidth={2.5} className="text-white" />
+                </div>
+              </Link>
+            );
+          }
+          const active = pathname === tab.href;
+          const Icon = tab.icon;
           return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              className="flex-1 flex justify-center"
-            >
-              <div className="w-14 h-14 -mt-6 bg-primary rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all duration-200">
-                <Plus size={28} strokeWidth={2.5} className="text-white" />
-              </div>
+            <Link key={tab.href} href={tab.href} className="flex-1 flex flex-col items-center gap-0.5 pb-2">
+              <Icon size={22} strokeWidth={active ? 2.2 : 1.5} className={active ? "text-gray-900" : "text-gray-400"} />
+              <span className={`text-[10px] font-medium ${active ? "text-gray-900" : "text-gray-400"}`}>
+                {tab.label}
+              </span>
             </Link>
           );
-        }
-        const active = pathname === tab.href;
-        const Icon = tab.icon;
-        return (
-          <Link
-            key={tab.href}
-            href={tab.href}
-            className="flex-1 flex flex-col items-center gap-1"
-          >
-            <Icon
-              size={24}
-              strokeWidth={1.8}
-              className={active ? "text-primary" : "text-gray-400"}
-            />
-            <span
-              className={`text-tiny ${active ? "text-primary" : "text-gray-400"}`}
-            >
-              {tab.label}
-            </span>
-          </Link>
-        );
-      })}
+        })}
+      </div>
+      {/* Safe area spacer */}
+      <div className="h-[env(safe-area-inset-bottom,0px)] bg-white" />
     </nav>
   );
 }
