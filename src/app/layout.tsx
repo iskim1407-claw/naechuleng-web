@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import TabBar from "@/components/TabBar";
-
 export const metadata: Metadata = {
   title: "Bites",
   description: "한 입의 발견",
@@ -20,7 +18,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ko">
       <body className="bg-black min-h-screen max-w-[480px] mx-auto relative antialiased text-white">
         <div className="min-h-screen">{children}</div>
-        <TabBar />
       </body>
     </html>
   );
