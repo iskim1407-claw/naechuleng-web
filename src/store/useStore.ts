@@ -1,6 +1,6 @@
 "use client";
 import { create } from "zustand";
-import { mockPosts, type Post } from "@/data/mock";
+import { mockPostsExtended, type Post } from "@/data/mock";
 
 interface AppState {
   isLoggedIn: boolean;
@@ -16,7 +16,7 @@ interface AppState {
 
 export const useStore = create<AppState>((set, get) => ({
   isLoggedIn: false,
-  posts: mockPosts,
+  posts: mockPostsExtended,
   likedIds: new Set(),
   bookmarkedIds: new Set(),
   login: () => {
