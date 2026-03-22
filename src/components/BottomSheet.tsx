@@ -8,8 +8,8 @@ interface Props {
   onTabChange: (tab: string) => void;
 }
 
-const PEEK = 56;   // just handle + tab icons
-const HALF = 380;  // content visible
+const PEEK = 100;  // handle + tab icons clearly visible
+const HALF = 400;  // content visible
 const FULL_RATIO = 0.88; // 88% of viewport
 
 const tabs = [
@@ -89,12 +89,12 @@ export default function BottomSheet({ children, activeTab, onTabChange }: Props)
         style={{ touchAction: "none" }}
       >
         {/* Handle bar */}
-        <div className="flex justify-center pt-2.5 pb-1">
-          <div className="w-8 h-1 rounded-full bg-white/20" />
+        <div className="flex justify-center pt-3 pb-2">
+          <div className="w-10 h-1 rounded-full bg-white/25" />
         </div>
 
         {/* Tab icons */}
-        <div className="flex justify-center gap-1 pb-2 px-4">
+        <div className="flex justify-center gap-2 pb-3 px-4">
           {tabs.map((tab) => {
             const active = activeTab === tab.key;
             const Icon = tab.icon;
@@ -106,13 +106,13 @@ export default function BottomSheet({ children, activeTab, onTabChange }: Props)
                   onTabChange(tab.key);
                   if (isPeek) setHeight(HALF);
                 }}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all text-[11px] font-medium ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all text-[12px] font-medium ${
                   active
-                    ? "bg-white/15 text-white"
-                    : "text-white/35 hover:text-white/50"
+                    ? "bg-white/15 text-white border border-white/10"
+                    : "text-white/40 hover:text-white/50"
                 }`}
               >
-                <Icon size={14} strokeWidth={active ? 2 : 1.5} />
+                <Icon size={16} strokeWidth={active ? 2 : 1.5} />
                 <span>{tab.label}</span>
               </button>
             );

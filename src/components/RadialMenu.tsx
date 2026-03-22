@@ -12,7 +12,7 @@ export default function RadialMenu() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="absolute right-4 bottom-[76px] z-[1200]">
+    <div className="absolute right-4 bottom-[120px] z-[1200]">
       {/* Menu items — fan out upward */}
       {items.map((item, i) => {
         const Icon = item.icon;
