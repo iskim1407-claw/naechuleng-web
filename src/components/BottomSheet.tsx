@@ -8,9 +8,9 @@ interface Props {
   onTabChange: (tab: string) => void;
 }
 
-const PEEK = 100;  // handle + tab icons clearly visible
-const HALF = 400;  // content visible
-const FULL_RATIO = 0.88; // 88% of viewport
+const PEEK = 120;
+const HALF = 420;
+const FULL_RATIO = 0.9;
 
 const tabs = [
   { key: "feed", icon: LayoutGrid, label: "피드" },
@@ -23,11 +23,9 @@ export default function BottomSheet({ children, activeTab, onTabChange }: Props)
   const [dragging, setDragging] = useState(false);
   const startY = useRef(0);
   const startH = useRef(0);
-  const sheetRef = useRef<HTMLDivElement>(null);
   const fullH = typeof window !== "undefined" ? window.innerHeight * FULL_RATIO : 700;
 
   const snapTo = useCallback((h: number) => {
-    // Snap to nearest
     const snaps = [PEEK, HALF, fullH];
     let closest = snaps[0];
     let minDist = Math.abs(h - snaps[0]);
@@ -38,7 +36,26 @@ export default function BottomSheet({ children, activeTab, onTabChange }: Props)
     setHeight(closest);
   }, [fullH]);
 
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    setDragging(true);
+    startY.current = e.touches[0].clientY;
+    startH.current = height;
+  }, [height]);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!dragging) return;
+    const delta = startY.current - e.touches[0].clientY;
+    const newH = Math.max(PEEK, Math.min(fullH, startH.current + delta));
+    setHeight(newH);
+  }, [dragging, fullH]);
+
+  const onTouchEnd = useCallback(() => {
+    setDragging(false);
+    snapTo(height);
+  }, [height, snapTo]);
+
   const onPointerDown = useCallback((e: React.PointerEvent) => {
+    if (e.pointerType === "touch") return; // handled by touch events
     setDragging(true);
     startY.current = e.clientY;
     startH.current = height;
@@ -46,55 +63,70 @@ export default function BottomSheet({ children, activeTab, onTabChange }: Props)
   }, [height]);
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
-    if (!dragging) return;
+    if (!dragging || e.pointerType === "touch") return;
     const delta = startY.current - e.clientY;
     const newH = Math.max(PEEK, Math.min(fullH, startH.current + delta));
     setHeight(newH);
   }, [dragging, fullH]);
 
-  const onPointerUp = useCallback(() => {
+  const onPointerUp = useCallback((e: React.PointerEvent) => {
+    if (e.pointerType === "touch") return;
     setDragging(false);
     snapTo(height);
   }, [height, snapTo]);
 
-  // Tap handle to cycle peek → half → full → peek
   const onHandleTap = useCallback(() => {
-    if (dragging) return;
     if (height <= PEEK + 10) setHeight(HALF);
     else if (height <= HALF + 10) setHeight(fullH);
     else setHeight(PEEK);
-  }, [height, dragging, fullH]);
+  }, [height, fullH]);
 
   const isPeek = height <= PEEK + 10;
 
   return (
     <div
-      ref={sheetRef}
-      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-[9999] flex flex-col"
+      id="bottom-sheet"
       style={{
+        position: "fixed",
+        bottom: 0,
+        left: "50%",
+        transform: "translateX(-50%)",
+        width: "100%",
+        maxWidth: 480,
         height: `${height}px`,
+        zIndex: 99999,
+        display: "flex",
+        flexDirection: "column",
         transition: dragging ? "none" : "height 0.35s cubic-bezier(0.32, 0.72, 0, 1)",
       }}
     >
-      {/* Glass background */}
-      <div className="absolute inset-0 bg-[#111111] rounded-t-[20px] border-t border-white/15" />
+      {/* Background */}
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        background: "#1a1a1a",
+        borderTop: "1px solid rgba(255,255,255,0.15)",
+        borderRadius: "20px 20px 0 0",
+      }} />
 
-      {/* Drag handle + tabs */}
+      {/* Drag handle area */}
       <div
-        className="relative z-10 cursor-grab active:cursor-grabbing select-none"
+        style={{ position: "relative", zIndex: 10, cursor: "grab", touchAction: "none", userSelect: "none" }}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onClick={onHandleTap}
-        style={{ touchAction: "none" }}
       >
         {/* Handle bar */}
-        <div className="flex justify-center pt-3 pb-2">
-          <div className="w-10 h-1 rounded-full bg-white/25" />
+        <div style={{ display: "flex", justifyContent: "center", paddingTop: 12, paddingBottom: 8 }}>
+          <div style={{ width: 40, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.3)" }} />
         </div>
 
-        {/* Tab icons */}
-        <div className="flex justify-center gap-2 pb-3 px-4">
+        {/* Tab buttons */}
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, paddingBottom: 12, paddingLeft: 16, paddingRight: 16 }}>
           {tabs.map((tab) => {
             const active = activeTab === tab.key;
             const Icon = tab.icon;
@@ -106,11 +138,20 @@ export default function BottomSheet({ children, activeTab, onTabChange }: Props)
                   onTabChange(tab.key);
                   if (isPeek) setHeight(HALF);
                 }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all text-[12px] font-medium ${
-                  active
-                    ? "bg-white/15 text-white border border-white/10"
-                    : "text-white/40 hover:text-white/50"
-                }`}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "8px 16px",
+                  borderRadius: 20,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  border: active ? "1px solid rgba(255,107,53,0.5)" : "1px solid transparent",
+                  background: active ? "rgba(255,107,53,0.15)" : "transparent",
+                  color: active ? "#FF6B35" : "rgba(255,255,255,0.4)",
+                  transition: "all 0.2s",
+                  cursor: "pointer",
+                }}
               >
                 <Icon size={16} strokeWidth={active ? 2 : 1.5} />
                 <span>{tab.label}</span>
@@ -118,18 +159,30 @@ export default function BottomSheet({ children, activeTab, onTabChange }: Props)
             );
           })}
         </div>
+
+        {/* Peek hint text */}
+        {isPeek && (
+          <div style={{ textAlign: "center", paddingBottom: 8, fontSize: 11, color: "rgba(255,255,255,0.25)" }}>
+            ↑ 올려서 피드 보기
+          </div>
+        )}
       </div>
 
       {/* Content area */}
       <div
-        className="relative z-10 flex-1 overflow-y-auto hide-scrollbar px-4"
-        style={{ opacity: isPeek ? 0 : 1, transition: "opacity 0.2s" }}
+        style={{
+          position: "relative",
+          zIndex: 10,
+          flex: 1,
+          overflowY: "auto",
+          padding: "0 16px",
+          opacity: isPeek ? 0 : 1,
+          transition: "opacity 0.2s",
+        }}
+        className="hide-scrollbar"
       >
         {children}
       </div>
-
-      {/* Safe area */}
-      <div className="relative z-10 h-[env(safe-area-inset-bottom,0px)]" />
     </div>
   );
 }

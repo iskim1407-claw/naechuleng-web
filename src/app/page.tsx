@@ -321,7 +321,7 @@ export default function MapHome() {
       )}
 
       {/* User filter row — positioned above bottom sheet */}
-      <div className="absolute bottom-[116px] left-0 right-0 z-[1050] px-4">
+      <div className="fixed bottom-[136px] left-1/2 -translate-x-1/2 w-full max-w-[480px] px-4" style={{ zIndex: 99998 }}>
         <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
           {mockUsers.map((u) => {
             const color = userColors[u.username] || "#FF6B35";
