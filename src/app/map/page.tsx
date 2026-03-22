@@ -1,84 +1,91 @@
 "use client";
 import { useState } from "react";
-import { MapPin } from "lucide-react";
-import { useStore } from "@/store/useStore";
+import { X } from "lucide-react";
 import Image from "next/image";
+import { mockPostsExtended } from "@/data/mock";
+import TabBar from "@/components/TabBar";
+import type { Post } from "@/data/mock";
 
-const pins = [
-  { id: 1, x: "30%", y: "35%" },
-  { id: 2, x: "55%", y: "25%" },
-  { id: 3, x: "40%", y: "55%" },
-  { id: 4, x: "65%", y: "45%" },
-];
+const ratingEmoji = { love: "😍", good: "🙂", okay: "😐" };
 
 export default function MapPage() {
-  const posts = useStore((s) => s.posts);
-  const [selected, setSelected] = useState<number | null>(null);
-  const selectedPost = posts.find((p) => p.id === selected);
+  const [selected, setSelected] = useState<Post | null>(null);
 
   return (
-    <div className="min-h-screen bg-[#E8E4DF] relative overflow-hidden">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-100">
-        <div className="flex items-center px-5 h-[56px]">
-          <h1 className="text-header text-primary">내 지도</h1>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#F5F1EB] relative overflow-hidden">
+      {/* Grid background */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+        }}
+      />
 
-      {/* Map area */}
-      <div className="relative w-full" style={{ height: "calc(100vh - 56px - 80px)" }}>
-        {/* Grid lines for map feel */}
-        <div className="absolute inset-0 opacity-10">
-          {[...Array(8)].map((_, i) => (
-            <div key={`h${i}`} className="absolute w-full border-t border-gray-400" style={{ top: `${(i + 1) * 12}%` }} />
-          ))}
-          {[...Array(6)].map((_, i) => (
-            <div key={`v${i}`} className="absolute h-full border-l border-gray-400" style={{ left: `${(i + 1) * 16}%` }} />
-          ))}
-        </div>
-
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur px-4 py-2 rounded-full text-sub text-gray-500 shadow-sm">
-          서울특별시
-        </div>
-
-        {/* Pins */}
-        {pins.map((pin) => {
-          const post = posts.find((p) => p.id === pin.id);
-          return (
-            <button
-              key={pin.id}
-              onClick={() => setSelected(selected === pin.id ? null : pin.id)}
-              className="absolute -translate-x-1/2 -translate-y-full transition-transform active:scale-110"
-              style={{ left: pin.x, top: pin.y }}
-            >
-              <MapPin
-                size={selected === pin.id ? 36 : 28}
-                className="text-primary fill-primary drop-shadow-md"
-                strokeWidth={2}
-              />
-              {post && (
-                <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-white rounded-full px-2 py-0.5 text-[11px] font-medium text-gray-700 shadow-sm">
-                  {post.place}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+      {/* Pins */}
+      {mockPostsExtended.map((post) => (
+        <button
+          key={post.id}
+          onClick={() => setSelected(post)}
+          className="absolute z-10 active:scale-110 transition-all duration-200"
+          style={{
+            left: `${15 + ((post.lng - 126.9) * 800) % 70}%`,
+            top: `${15 + ((post.lat - 37.53) * 600) % 60}%`,
+          }}
+        >
+          <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center shadow-lg text-lg border-2 border-white">
+            {ratingEmoji[post.rating]}
+          </div>
+          <div className="w-3 h-3 bg-primary rotate-45 mx-auto -mt-1.5" />
+        </button>
+      ))}
 
       {/* Bottom card */}
-      {selectedPost && (
-        <div className="absolute bottom-24 left-4 right-4 bg-white rounded-card shadow-lg p-4 flex gap-3 animate-[slideUp_0.2s_ease-out]">
-          <div className="relative w-16 h-16 rounded-btn overflow-hidden flex-shrink-0">
-            <Image src={selectedPost.image} alt={selectedPost.place} fill className="object-cover" unoptimized />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-body font-semibold text-gray-900 truncate">{selectedPost.place}</p>
-            <p className="text-sub text-gray-500">{selectedPost.area}</p>
-            <p className="text-sub text-gray-600 truncate">{selectedPost.review}</p>
+      {selected && (
+        <div className="absolute bottom-[90px] left-0 right-0 z-20 px-4 animate-slideUp">
+          <div className="bg-white rounded-t-2xl shadow-lg p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <Image
+                  src={selected.avatar}
+                  alt={selected.user}
+                  width={40}
+                  height={40}
+                  className="rounded-full bg-gray-100"
+                  unoptimized
+                />
+                <div>
+                  <p className="font-semibold text-body">{selected.place}</p>
+                  <p className="text-sub text-gray-500">
+                    {selected.area} · {selected.user}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelected(null)}
+                className="active:scale-95 transition-all"
+              >
+                <X size={20} className="text-gray-400" />
+              </button>
+            </div>
+            <div className="rounded-xl overflow-hidden aspect-video relative mb-3">
+              <Image
+                src={selected.image}
+                alt={selected.place}
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            </div>
+            <p className="text-body">
+              {ratingEmoji[selected.rating]} {selected.review}
+            </p>
           </div>
         </div>
       )}
+
+      <TabBar />
     </div>
   );
 }

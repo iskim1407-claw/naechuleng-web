@@ -11,7 +11,7 @@ const config: Config = {
       colors: {
         primary: "#FF6B35",
         "primary-light": "#FFF0E9",
-        bg: "#F4F4F4",
+        bg: "#FAFAFA",
         kakao: "#FEE500",
       },
       borderRadius: {
@@ -19,9 +19,24 @@ const config: Config = {
         btn: "12px",
       },
       fontSize: {
-        header: ["22px", { lineHeight: "1.5", fontWeight: "700" }],
+        header: ["24px", { lineHeight: "1.5", fontWeight: "700" }],
         body: ["15px", { lineHeight: "1.5" }],
         sub: ["13px", { lineHeight: "1.5" }],
+        tiny: ["11px", { lineHeight: "1.5" }],
+      },
+      keyframes: {
+        slideUp: {
+          "0%": { transform: "translateY(100%)" },
+          "100%": { transform: "translateY(0)" },
+        },
+        bounceHeart: {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.3)" },
+        },
+      },
+      animation: {
+        slideUp: "slideUp 0.3s ease-out",
+        bounceHeart: "bounceHeart 0.3s ease-out",
       },
     },
   },

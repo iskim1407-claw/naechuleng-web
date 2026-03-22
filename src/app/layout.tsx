@@ -1,17 +1,9 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import "./globals.css";
-import TabBar from "@/components/TabBar";
 
 export const metadata: Metadata = {
-  title: "내슐랭",
-  description: "나만의 맛집 지도를 완성해봐",
-};
-
-export const viewport: Viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 1,
-  viewportFit: "cover",
+  title: "Bites — 한 입의 발견",
+  description: "친구들의 맛집을 한 입에 발견하세요",
 };
 
 export default function RootLayout({
@@ -21,11 +13,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body>
-        <div className="mx-auto max-w-[430px] min-h-screen relative">
-          {children}
-          <TabBar />
-        </div>
+      <body className="bg-bg min-h-screen max-w-[480px] mx-auto relative">
+        {children}
       </body>
     </html>
   );
