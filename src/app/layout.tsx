@@ -3,8 +3,8 @@ import "./globals.css";
 import TabBar from "@/components/TabBar";
 
 export const metadata: Metadata = {
-  title: "Bites — 한 입의 발견",
-  description: "친구들의 맛집을 한 입에 발견하세요",
+  title: "Bites",
+  description: "한 입의 발견",
 };
 
 export const viewport: Viewport = {
@@ -15,17 +15,11 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
-      <body className="bg-[#F2F2F2] min-h-screen max-w-[480px] mx-auto relative antialiased">
-        <div className="min-h-screen">
-          {children}
-        </div>
+      <body className="bg-black min-h-screen max-w-[480px] mx-auto relative antialiased text-white">
+        <div className="min-h-screen">{children}</div>
         <TabBar />
       </body>
     </html>

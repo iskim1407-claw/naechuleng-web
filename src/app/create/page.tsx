@@ -1,120 +1,69 @@
 "use client";
+import { Camera, MapPin, Navigation } from "lucide-react";
 import { useState } from "react";
-import { Camera, MapPin, Navigation, ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useStore } from "@/store/useStore";
 
 const ratings = [
-  { value: "okay" as const, emoji: "😐", label: "괜찮아" },
-  { value: "good" as const, emoji: "🙂", label: "맛있어" },
-  { value: "love" as const, emoji: "😍", label: "미쳤어" },
+  { key: "okay", emoji: "😐", label: "괜찮아" },
+  { key: "good", emoji: "🙂", label: "맛있어" },
+  { key: "love", emoji: "😍", label: "미쳤어" },
 ];
 
 export default function CreatePage() {
-  const router = useRouter();
-  const { addPost } = useStore();
-  const [place, setPlace] = useState("");
-  const [area, setArea] = useState("");
-  const [review, setReview] = useState("");
-  const [rating, setRating] = useState<"okay" | "good" | "love">("good");
-
-  const handleSubmit = () => {
-    addPost({
-      id: Date.now(),
-      user: "food_explorer",
-      avatar: "https://api.dicebear.com/7.x/thumbs/svg?seed=food_explorer",
-      place: place || "새 맛집",
-      area: area || "서울",
-      review: review || "맛있어요!",
-      rating,
-      likes: 0,
-      image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600",
-      time: "방금",
-      category: "한식",
-      lat: 37.56,
-      lng: 126.97,
-    });
-    router.push("/");
-  };
+  const [rating, setRating] = useState<string | null>(null);
 
   return (
-    <div className="min-h-screen bg-white pb-[90px]">
-      {/* Header */}
-      <header className="sticky top-0 z-40 h-14 bg-white/80 backdrop-blur-xl border-b border-gray-100 flex items-center px-5">
-        <button
-          onClick={() => router.back()}
-          className="active:scale-95 transition-all duration-200"
-        >
-          <ArrowLeft size={24} strokeWidth={1.8} />
-        </button>
-        <h1 className="flex-1 text-center font-semibold text-body">새 글</h1>
-        <div className="w-6" />
-      </header>
+    <div className="pb-[70px]">
+      <div className="px-4 pt-3 pb-2 border-b border-white/10">
+        <span className="text-[16px] font-bold">새 포스트</span>
+      </div>
 
-      <div className="px-5 pt-5 space-y-5">
+      <div className="px-4 pt-4 space-y-5">
         {/* Photo */}
-        <div className="aspect-square rounded-2xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-2 text-gray-400 active:bg-gray-50 transition-all duration-200 cursor-pointer">
-          <Camera size={32} strokeWidth={1.5} />
-          <span className="text-sub">사진 추가</span>
+        <div className="aspect-[4/3] rounded-xl border border-dashed border-white/20 flex flex-col items-center justify-center gap-2 active:bg-white/5 transition-colors cursor-pointer">
+          <Camera size={32} className="text-white/30" strokeWidth={1.5} />
+          <span className="text-[13px] text-white/30">사진 추가</span>
         </div>
 
         {/* Place */}
-        <div className="flex items-center gap-3 h-[52px] bg-gray-50 rounded-xl px-4">
-          <MapPin size={20} strokeWidth={1.8} className="text-gray-400 shrink-0" />
-          <input
-            value={place}
-            onChange={(e) => setPlace(e.target.value)}
-            placeholder="장소명"
-            className="flex-1 bg-transparent text-body outline-none placeholder:text-gray-400"
-          />
+        <div className="flex items-center gap-3 h-[44px] bg-white/5 rounded-lg px-3.5">
+          <MapPin size={18} className="text-white/30" strokeWidth={1.8} />
+          <input placeholder="맛집 이름" className="bg-transparent text-[14px] text-white placeholder:text-white/30 outline-none flex-1" />
         </div>
 
-        {/* Area */}
-        <div className="flex items-center gap-3 h-[52px] bg-gray-50 rounded-xl px-4">
-          <Navigation size={20} strokeWidth={1.8} className="text-gray-400 shrink-0" />
-          <input
-            value={area}
-            onChange={(e) => setArea(e.target.value)}
-            placeholder="위치"
-            className="flex-1 bg-transparent text-body outline-none placeholder:text-gray-400"
-          />
+        {/* Location */}
+        <div className="flex items-center gap-3 h-[44px] bg-white/5 rounded-lg px-3.5">
+          <Navigation size={18} className="text-white/30" strokeWidth={1.8} />
+          <input placeholder="위치 (동네)" className="bg-transparent text-[14px] text-white placeholder:text-white/30 outline-none flex-1" />
         </div>
 
         {/* Review */}
         <textarea
-          value={review}
-          onChange={(e) => setReview(e.target.value)}
           placeholder="이 맛집을 한마디로?"
-          className="w-full h-24 bg-gray-50 rounded-xl px-4 py-3 text-body outline-none placeholder:text-gray-400 resize-none"
+          className="w-full h-[80px] bg-white/5 rounded-lg p-3.5 text-[14px] text-white placeholder:text-white/30 outline-none resize-none"
         />
 
         {/* Rating */}
-        <div className="grid grid-cols-3 gap-3">
-          {ratings.map((r) => (
-            <button
-              key={r.value}
-              onClick={() => setRating(r.value)}
-              className={`h-20 rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-200 active:scale-95 ${
-                rating === r.value
-                  ? "border-2 border-primary bg-orange-50"
-                  : "border border-gray-200 bg-white"
-              }`}
-            >
-              <span className="text-2xl">{r.emoji}</span>
-              <span className="text-sub font-medium">{r.label}</span>
-            </button>
-          ))}
+        <div>
+          <p className="text-[13px] text-white/50 mb-2.5">평점</p>
+          <div className="flex gap-2.5">
+            {ratings.map((r) => (
+              <button key={r.key} onClick={() => setRating(r.key)}
+                className={`flex-1 py-3 rounded-xl flex flex-col items-center gap-1 transition-all ${
+                  rating === r.key ? "bg-[#FF6B35]/20 border border-[#FF6B35]" : "bg-white/5 border border-transparent"
+                }`}
+              >
+                <span className="text-[24px]">{r.emoji}</span>
+                <span className={`text-[12px] font-medium ${rating === r.key ? "text-[#FF6B35]" : "text-white/50"}`}>{r.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Submit */}
-        <button
-          onClick={handleSubmit}
-          className="w-full h-[52px] bg-primary text-white rounded-xl font-semibold active:scale-95 transition-all duration-200"
-        >
+        <button className="w-full h-[48px] bg-gradient-to-r from-[#FF6B35] to-[#ff9a62] rounded-xl text-[15px] font-bold active:scale-[0.97] transition-transform">
           등록하기
         </button>
       </div>
-
     </div>
   );
 }

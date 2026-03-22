@@ -1,69 +1,55 @@
 "use client";
-import { useState } from "react";
 import { Search } from "lucide-react";
 import Image from "next/image";
-import { mockPostsExtended } from "@/data/mock";
+import { useState } from "react";
 
 const categories = ["전체", "한식", "양식", "일식", "카페", "술집", "분식", "디저트"];
+const images = [
+  "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300",
+  "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=300",
+  "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=300",
+  "https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=300",
+  "https://images.unsplash.com/photo-1482049016688-2d3e1b311543?w=300",
+  "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=300",
+  "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=300",
+  "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=300",
+  "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=300",
+];
 
 export default function DiscoverPage() {
-  const [cat, setCat] = useState("전체");
-  const [query, setQuery] = useState("");
-
-  const filtered = mockPostsExtended.filter((p) => {
-    if (cat !== "전체" && p.category !== cat) return false;
-    if (query && !p.place.includes(query) && !p.review.includes(query)) return false;
-    return true;
-  });
+  const [active, setActive] = useState("전체");
 
   return (
-    <div className="min-h-screen bg-bg pb-[90px]">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-100 px-5 pt-3 pb-3 space-y-3">
-        {/* Search */}
-        <div className="flex items-center gap-3 h-[44px] bg-gray-100 rounded-xl px-4">
-          <Search size={20} strokeWidth={1.8} className="text-gray-400 shrink-0" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="맛집 검색"
-            className="flex-1 bg-transparent text-body outline-none placeholder:text-gray-400"
-          />
+    <div className="pb-[70px]">
+      {/* Search bar */}
+      <div className="px-3.5 pt-3 pb-2">
+        <div className="flex items-center gap-2 h-[36px] bg-white/10 rounded-lg px-3">
+          <Search size={16} className="text-white/40" strokeWidth={1.8} />
+          <input placeholder="맛집 검색" className="bg-transparent text-[14px] text-white placeholder:text-white/30 outline-none flex-1" />
         </div>
+      </div>
 
-        {/* Categories */}
-        <div className="flex gap-2 overflow-x-auto hide-scrollbar">
-          {categories.map((c) => (
-            <button
-              key={c}
-              onClick={() => setCat(c)}
-              className={`shrink-0 px-4 py-1.5 rounded-full text-sub font-medium transition-all duration-200 active:scale-95 ${
-                cat === c
-                  ? "bg-primary text-white"
-                  : "bg-gray-100 text-gray-600"
-              }`}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
-      </header>
-
-      {/* Grid */}
-      <div className="grid grid-cols-3 gap-0.5">
-        {filtered.map((post) => (
-          <div key={post.id} className="aspect-square relative">
-            <Image
-              src={post.image}
-              alt={post.place}
-              fill
-              className="object-cover"
-              unoptimized
-            />
-          </div>
+      {/* Categories */}
+      <div className="flex gap-2 px-3.5 py-2 overflow-x-auto hide-scrollbar">
+        {categories.map((cat) => (
+          <button key={cat} onClick={() => setActive(cat)}
+            className={`px-3.5 py-1.5 rounded-full text-[12px] font-medium whitespace-nowrap transition-colors ${
+              active === cat ? "bg-white text-black" : "bg-white/10 text-white/60"
+            }`}
+          >
+            {cat}
+          </button>
         ))}
       </div>
 
+      {/* Grid */}
+      <div className="grid grid-cols-3 gap-px mt-1">
+        {images.map((img, i) => (
+          <div key={i} className="relative aspect-square">
+            <Image src={img} alt="" fill className="object-cover" unoptimized />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
