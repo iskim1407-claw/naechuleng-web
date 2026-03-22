@@ -1,9 +1,6 @@
 "use client";
-import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { useEffect, useRef } from "react";
 import type { Post } from "@/data/mock";
-import { useEffect } from "react";
 
 interface Props {
   posts: Post[];
@@ -12,85 +9,111 @@ interface Props {
   onPinClick: (id: number) => void;
 }
 
-function createFoodIcon(post: Post, color: string, isSelected: boolean) {
-  const size = isSelected ? 52 : 40;
-  return L.divIcon({
-    className: "",
-    iconSize: [size, size + 16],
-    iconAnchor: [size / 2, size + 16],
-    html: `
-      <div style="display:flex;flex-direction:column;align-items:center;">
-        <div style="
-          width:${size}px;height:${size}px;
-          border-radius:50%;
-          border:3px solid ${color};
-          overflow:hidden;
-          box-shadow:0 0 ${isSelected ? 16 : 8}px ${color}80;
-          transition:all 0.2s;
-        ">
-          <img src="${post.image}" style="width:100%;height:100%;object-fit:cover;" />
-        </div>
-        <div style="
-          margin-top:2px;
-          padding:1px 6px;
-          background:rgba(0,0,0,0.7);
-          border-radius:4px;
-          font-size:10px;
-          color:rgba(255,255,255,0.85);
-          white-space:nowrap;
-          max-width:70px;
-          overflow:hidden;
-          text-overflow:ellipsis;
-          backdrop-filter:blur(4px);
-        ">${post.place}</div>
-      </div>
-    `,
-  });
-}
-
-function FlyToSelected({ posts, selectedPin }: { posts: Post[]; selectedPin: number | null }) {
-  const map = useMap();
-  useEffect(() => {
-    if (selectedPin) {
-      const post = posts.find((p) => p.id === selectedPin);
-      if (post) map.flyTo([post.lat, post.lng], 15, { duration: 0.5 });
-    }
-  }, [selectedPin, posts, map]);
-  return null;
-}
-
 export default function MapView({ posts, userColors, selectedPin, onPinClick }: Props) {
-  // Center on Seoul
-  const center: [number, number] = [37.555, 126.97];
+  const mapRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapInstanceRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const markersRef = useRef<any[]>([]);
 
-  return (
-    <MapContainer
-      center={center}
-      zoom={13}
-      style={{ width: "100%", height: "100%" }}
-      zoomControl={false}
-      attributionControl={false}
-    >
-      {/* Dark map tiles */}
-      <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        maxZoom={19}
-      />
+  useEffect(() => {
+    if (!mapRef.current || typeof window === "undefined") return;
 
-      <FlyToSelected posts={posts} selectedPin={selectedPin} />
+    // Add leaflet CSS
+    if (!document.querySelector('link[href*="leaflet"]')) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(link);
+    }
 
-      {posts.map((post) => {
-        const color = userColors[post.user] || "#FF6B35";
-        const isSelected = selectedPin === post.id;
-        return (
-          <Marker
-            key={post.id}
-            position={[post.lat, post.lng]}
-            icon={createFoodIcon(post, color, isSelected)}
-            eventHandlers={{ click: () => onPinClick(post.id) }}
-          />
-        );
-      })}
-    </MapContainer>
-  );
+    import("leaflet").then((L) => {
+
+      if (mapInstanceRef.current) return; // already initialized
+
+      const map = L.map(mapRef.current!, {
+        center: [37.555, 126.97],
+        zoom: 13,
+        zoomControl: false,
+        attributionControl: false,
+      });
+
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+        maxZoom: 19,
+      }).addTo(map);
+
+      mapInstanceRef.current = map;
+
+      // Add markers
+      updateMarkers(L, map, posts, userColors, selectedPin, onPinClick);
+    });
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Update markers when posts/selectedPin change
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    import("leaflet").then((L) => {
+      updateMarkers(L, mapInstanceRef.current, posts, userColors, selectedPin, onPinClick);
+
+      // Fly to selected
+      if (selectedPin) {
+        const post = posts.find((p) => p.id === selectedPin);
+        if (post) mapInstanceRef.current.flyTo([post.lat, post.lng], 15, { duration: 0.5 });
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [posts, selectedPin]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function updateMarkers(L: any, map: any, posts: Post[], colors: Record<string, string>, selected: number | null, onClick: (id: number) => void) {
+    // Clear existing
+    markersRef.current.forEach((m) => map.removeLayer(m));
+    markersRef.current = [];
+
+    posts.forEach((post) => {
+      const color = colors[post.user] || "#FF6B35";
+      const isSel = selected === post.id;
+      const size = isSel ? 52 : 40;
+
+      const icon = L.divIcon({
+        className: "",
+        iconSize: [size, size + 18],
+        iconAnchor: [size / 2, size + 18],
+        html: `
+          <div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;">
+            <div style="
+              width:${size}px;height:${size}px;
+              border-radius:50%;
+              border:3px solid ${color};
+              overflow:hidden;
+              box-shadow:0 0 ${isSel ? 16 : 8}px ${color}80;
+            ">
+              <img src="${post.image}" style="width:100%;height:100%;object-fit:cover;" />
+            </div>
+            <div style="
+              margin-top:2px;padding:1px 6px;
+              background:rgba(0,0,0,0.75);border-radius:4px;
+              font-size:10px;color:rgba(255,255,255,0.85);
+              white-space:nowrap;max-width:70px;overflow:hidden;text-overflow:ellipsis;
+              backdrop-filter:blur(4px);
+            ">${post.place}</div>
+          </div>
+        `,
+      });
+
+      const marker = L.marker([post.lat, post.lng], { icon }).addTo(map);
+      marker.on("click", () => onClick(post.id));
+      markersRef.current.push(marker);
+    });
+  }
+
+  return <div ref={mapRef} style={{ width: "100%", height: "100%" }} />;
 }
