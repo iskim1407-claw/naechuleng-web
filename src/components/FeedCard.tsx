@@ -3,6 +3,7 @@ import { Heart, Bookmark } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import type { Post } from "@/data/mock";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function FeedCard({ post }: { post: Post }) {
   const { likedIds, bookmarkedIds, toggleLike, toggleBookmark } = useStore();
@@ -14,7 +15,7 @@ export default function FeedCard({ post }: { post: Post }) {
   return (
     <div className="bg-white rounded-card border border-gray-100">
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 pb-3">
+      <Link href={`/user/${post.user}`} className="flex items-center gap-3 p-4 pb-3">
         <Image
           src={post.avatar}
           alt={post.user}
@@ -29,7 +30,7 @@ export default function FeedCard({ post }: { post: Post }) {
             {post.place} · {post.area} {ratingEmoji}
           </p>
         </div>
-      </div>
+      </Link>
 
       {/* Image */}
       <div className="px-4">
