@@ -70,14 +70,14 @@ export default function BottomSheet({ children, activeTab, onTabChange }: Props)
   return (
     <div
       ref={sheetRef}
-      className="absolute bottom-0 left-0 right-0 z-[1100] flex flex-col"
+      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-[9999] flex flex-col"
       style={{
         height: `${height}px`,
         transition: dragging ? "none" : "height 0.35s cubic-bezier(0.32, 0.72, 0, 1)",
       }}
     >
       {/* Glass background */}
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-2xl rounded-t-[20px] border-t border-white/10" />
+      <div className="absolute inset-0 bg-[#111111] rounded-t-[20px] border-t border-white/15" />
 
       {/* Drag handle + tabs */}
       <div
