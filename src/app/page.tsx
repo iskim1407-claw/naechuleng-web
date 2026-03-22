@@ -11,12 +11,6 @@ const userColors: Record<string, string> = {
   taco_fan: "#10B981",
 };
 
-const ratingEmoji: Record<string, string> = {
-  love: "😍",
-  good: "🙂",
-  okay: "😐",
-};
-
 const categories = ["전체", "한식", "양식", "카페", "술집"];
 
 // Map bounds for Seoul area — normalize lat/lng to percentage positions
@@ -111,22 +105,20 @@ export default function MapHome() {
             style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: "translate(-50%, -50%)" }}
           >
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center text-[18px] transition-all ${
-                isSelected ? "scale-125" : "scale-100"
+              className={`rounded-full overflow-hidden transition-all ${
+                isSelected ? "w-14 h-14 scale-110" : "w-10 h-10"
               }`}
               style={{
-                backgroundColor: color,
-                boxShadow: `0 0 ${isSelected ? 20 : 12}px ${color}60`,
+                border: `3px solid ${color}`,
+                boxShadow: `0 0 ${isSelected ? 20 : 10}px ${color}60`,
               }}
             >
-              {ratingEmoji[post.rating]}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={post.image} alt={post.place} className="w-full h-full object-cover" />
             </div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={post.avatar}
-              alt={post.user}
-              className="w-4 h-4 rounded-full border border-black mt-0.5"
-            />
+            <div className="text-[10px] mt-0.5 px-1 py-0.5 rounded bg-black/60 text-white/80 whitespace-nowrap max-w-[60px] truncate">
+              {post.place.length > 5 ? post.place.slice(0, 5) + '..' : post.place}
+            </div>
           </button>
         );
       })}
