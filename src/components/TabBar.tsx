@@ -1,11 +1,11 @@
 "use client";
-import { Home, MapPin, Search, User, Plus } from "lucide-react";
+import { MapPin, LayoutGrid, Search, User, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const tabs = [
-  { href: "/", icon: Home, label: "홈" },
-  { href: "/map", icon: MapPin, label: "지도" },
+  { href: "/", icon: MapPin, label: "홈" },
+  { href: "/feed", icon: LayoutGrid, label: "피드" },
   { href: "/create", icon: null, label: "" },
   { href: "/discover", icon: Search, label: "발견" },
   { href: "/profile", icon: User, label: "MY" },
@@ -22,7 +22,7 @@ export default function TabBar() {
           if (!tab.icon) {
             return (
               <Link key={tab.href} href={tab.href} className="flex-1 flex justify-center pb-1.5">
-                <div className="w-11 h-11 bg-gradient-to-tr from-[#FF6B35] to-[#ff9a62] rounded-xl flex items-center justify-center active:scale-90 transition-transform">
+                <div className="w-11 h-11 bg-gradient-to-tr from-[#FF6B35] to-[#ff9a62] rounded-xl flex items-center justify-center active:scale-90 transition-transform shadow-lg shadow-[#FF6B35]/30">
                   <Plus size={22} strokeWidth={2.5} className="text-white" />
                 </div>
               </Link>

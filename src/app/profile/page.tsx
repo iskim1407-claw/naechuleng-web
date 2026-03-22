@@ -1,64 +1,109 @@
 "use client";
-import { Settings } from "lucide-react";
+import { Settings, Grid3X3, MapPin } from "lucide-react";
+import { mockUser, mockPostsExtended } from "@/data/mock";
 import Image from "next/image";
-// Using static images for profile grid
+import { useState } from "react";
 
-const images = [
-  "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=300",
-  "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?w=300",
-  "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=300",
-  "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=300",
-  "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=300",
-  "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=300",
-];
+const userColors: Record<string, string> = {
+  foodie_kim: "#FF6B35",
+  pasta_lover: "#3B82F6",
+  cafe_hopper: "#A855F7",
+  taco_fan: "#10B981",
+};
+
+const MAP_BOUNDS = { minLat: 37.52, maxLat: 37.58, minLng: 126.9, maxLng: 127.06 };
+function toPercent(lat: number, lng: number) {
+  const x = ((lng - MAP_BOUNDS.minLng) / (MAP_BOUNDS.maxLng - MAP_BOUNDS.minLng)) * 100;
+  const y = ((MAP_BOUNDS.maxLat - lat) / (MAP_BOUNDS.maxLat - MAP_BOUNDS.minLat)) * 100;
+  return { x: Math.max(5, Math.min(95, x)), y: Math.max(8, Math.min(85, y)) };
+}
 
 export default function ProfilePage() {
+  const [tab, setTab] = useState<"grid" | "map">("grid");
+  const myPosts = mockPostsExtended.slice(0, 4); // simulate user's posts
+
   return (
     <div className="pb-[70px]">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 h-[44px] border-b border-white/10">
-        <span className="text-[16px] font-bold">맛집탐험가</span>
-        <button><Settings size={22} strokeWidth={1.8} className="text-white" /></button>
+      <div className="px-4 pt-3 pb-2 border-b border-white/10 flex items-center justify-between">
+        <span className="text-[16px] font-bold">{mockUser.username}</span>
+        <Settings size={20} className="text-white/50" />
       </div>
 
-      {/* Profile */}
-      <div className="px-4 py-4">
-        <div className="flex items-center gap-5">
-          <Image
-            src="https://api.dicebear.com/7.x/thumbs/svg?seed=food_explorer"
-            alt="me" width={80} height={80}
-            className="rounded-full bg-neutral-800 ring-2 ring-white/10" unoptimized
-          />
-          <div className="flex-1 flex justify-around text-center">
-            <div>
-              <p className="text-[17px] font-bold">12</p>
-              <p className="text-[11px] text-white/40">게시물</p>
-            </div>
-            <div>
-              <p className="text-[17px] font-bold">248</p>
-              <p className="text-[11px] text-white/40">팔로워</p>
-            </div>
-            <div>
-              <p className="text-[17px] font-bold">189</p>
-              <p className="text-[11px] text-white/40">팔로잉</p>
-            </div>
+      {/* Profile info */}
+      <div className="px-4 pt-4">
+        <div className="flex items-center gap-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={mockUser.avatar} alt="" className="w-16 h-16 rounded-full border-2 border-white/10" />
+          <div className="flex-1">
+            <h2 className="text-[16px] font-bold">{mockUser.name}</h2>
+            <p className="text-[13px] text-white/50 mt-0.5">{mockUser.bio}</p>
           </div>
         </div>
-        <p className="text-[14px] font-semibold mt-3">맛집탐험가</p>
-        <p className="text-[13px] text-white/50 mt-0.5">서울 맛집 정복 중 🍽️</p>
-        <button className="w-full mt-3 h-[32px] rounded-lg bg-white/10 text-[13px] font-semibold active:bg-white/20 transition-colors">
-          프로필 편집
+        <div className="flex gap-6 mt-4">
+          {[
+            { label: "포스트", val: mockUser.posts },
+            { label: "팔로워", val: mockUser.followers },
+            { label: "팔로잉", val: mockUser.following },
+          ].map((s) => (
+            <div key={s.label} className="text-center">
+              <p className="text-[16px] font-bold">{s.val}</p>
+              <p className="text-[11px] text-white/40">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Tab toggle */}
+      <div className="flex border-b border-white/10 mt-4">
+        <button onClick={() => setTab("grid")} className={`flex-1 py-2.5 flex justify-center ${tab === "grid" ? "border-b-2 border-white" : ""}`}>
+          <Grid3X3 size={20} className={tab === "grid" ? "text-white" : "text-white/40"} />
+        </button>
+        <button onClick={() => setTab("map")} className={`flex-1 py-2.5 flex justify-center ${tab === "map" ? "border-b-2 border-[#FF6B35]" : ""}`}>
+          <MapPin size={20} className={tab === "map" ? "text-[#FF6B35]" : "text-white/40"} />
         </button>
       </div>
 
-      {/* Grid */}
-      <div className="grid grid-cols-3 gap-px border-t border-white/10">
-        {images.map((img, i) => (
-          <div key={i} className="relative aspect-square">
-            <Image src={img} alt="" fill className="object-cover" unoptimized />
-          </div>
-        ))}
-      </div>
+      {tab === "grid" ? (
+        <div className="grid grid-cols-3 gap-0.5 mt-0.5">
+          {myPosts.map((p) => (
+            <div key={p.id} className="relative aspect-square">
+              <Image src={p.image} alt={p.place} fill className="object-cover" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        /* Mini map */
+        <div className="mx-4 mt-4 relative aspect-[4/3] bg-neutral-900 rounded-2xl border border-white/10 overflow-hidden">
+          {/* Grid */}
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={`h-${i}`} className="absolute w-full h-px bg-white/[0.04]" style={{ top: `${(i + 1) * 14}%` }} />
+          ))}
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={`v-${i}`} className="absolute h-full w-px bg-white/[0.04]" style={{ left: `${(i + 1) * 20}%` }} />
+          ))}
+          {/* Pins */}
+          {myPosts.map((p) => {
+            const pos = toPercent(p.lat, p.lng);
+            return (
+              <div
+                key={p.id}
+                className="absolute w-6 h-6 rounded-full flex items-center justify-center text-[10px]"
+                style={{
+                  left: `${pos.x}%`,
+                  top: `${pos.y}%`,
+                  transform: "translate(-50%, -50%)",
+                  backgroundColor: userColors[p.user] || "#FF6B35",
+                  boxShadow: `0 0 8px ${userColors[p.user] || "#FF6B35"}60`,
+                }}
+              >
+                {p.rating === "love" ? "😍" : p.rating === "good" ? "🙂" : "😐"}
+              </div>
+            );
+          })}
+          <div className="absolute bottom-2 left-3 text-[10px] text-white/30">내 맛집 지도</div>
+        </div>
+      )}
     </div>
   );
 }

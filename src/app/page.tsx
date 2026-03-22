@@ -1,293 +1,202 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Heart, ChevronRight, Users, User } from "lucide-react";
-import { useStore } from "@/store/useStore";
-import FeedCard from "@/components/FeedCard";
-import { mockUsers, mockPostsExtended, type Post } from "@/data/mock";
+import { useState } from "react";
+import { Heart, Navigation, Eye, EyeOff, X } from "lucide-react";
+import { mockPostsExtended, mockUsers } from "@/data/mock";
 import Image from "next/image";
 
-// User colors for map pins
 const userColors: Record<string, string> = {
   foodie_kim: "#FF6B35",
   pasta_lover: "#3B82F6",
   cafe_hopper: "#A855F7",
   taco_fan: "#10B981",
 };
-const userColorList = ["#FF6B35", "#3B82F6", "#A855F7", "#10B981"];
 
-export default function FeedPage() {
-  const { isLoggedIn, posts } = useStore();
-  const router = useRouter();
-  const [tab, setTab] = useState<"feed" | "users">("feed");
-  const [viewMode, setViewMode] = useState<"individual" | "all">("individual");
+const ratingEmoji: Record<string, string> = {
+  love: "😍",
+  good: "🙂",
+  okay: "😐",
+};
+
+const categories = ["전체", "한식", "양식", "카페", "술집"];
+
+// Map bounds for Seoul area — normalize lat/lng to percentage positions
+const MAP_BOUNDS = { minLat: 37.52, maxLat: 37.58, minLng: 126.9, maxLng: 127.06 };
+
+function toPercent(lat: number, lng: number) {
+  const x = ((lng - MAP_BOUNDS.minLng) / (MAP_BOUNDS.maxLng - MAP_BOUNDS.minLng)) * 100;
+  const y = ((MAP_BOUNDS.maxLat - lat) / (MAP_BOUNDS.maxLat - MAP_BOUNDS.minLat)) * 100;
+  return { x: Math.max(5, Math.min(95, x)), y: Math.max(8, Math.min(85, y)) };
+}
+
+export default function MapHome() {
+  const [selectedCategory, setSelectedCategory] = useState("전체");
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
-  const [selectedPin, setSelectedPin] = useState<Post | null>(null);
+  const [selectedPin, setSelectedPin] = useState<number | null>(null);
+  const [showAll, setShowAll] = useState(true);
 
-  useEffect(() => {
-    const stored = typeof window !== "undefined" && localStorage.getItem("user");
-    if (!stored && !isLoggedIn) router.replace("/login");
-    else if (stored && !isLoggedIn) useStore.getState().login();
-  }, [isLoggedIn, router]);
+  const filtered = mockPostsExtended.filter((p) => {
+    if (selectedCategory !== "전체" && p.category !== selectedCategory) return false;
+    if (!showAll && selectedUser && p.user !== selectedUser) return false;
+    return true;
+  });
 
-  if (!isLoggedIn) return null;
-
-  const mapBounds = { minLat: 37.48, maxLat: 37.59, minLng: 126.88, maxLng: 127.08 };
-  const pinPosition = (post: Post) => {
-    const x = ((post.lng - mapBounds.minLng) / (mapBounds.maxLng - mapBounds.minLng)) * 100;
-    const y = ((mapBounds.maxLat - post.lat) / (mapBounds.maxLat - mapBounds.minLat)) * 100;
-    return { left: `${Math.min(Math.max(x, 6), 94)}%`, top: `${Math.min(Math.max(y, 6), 90)}%` };
-  };
-  const emoji = (r: string) => r === "love" ? "😍" : r === "good" ? "🙂" : "😐";
+  const selectedPost = mockPostsExtended.find((p) => p.id === selectedPin);
 
   return (
-    <div className="pb-[70px]">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-black border-b border-white/10">
-        <div className="flex items-center justify-between px-4 h-[44px]">
-          <span className="text-[22px] font-bold italic tracking-tight">Bites</span>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4z"/>
-          </svg>
-        </div>
-        <div className="flex relative">
-          {(["feed", "users"] as const).map((t) => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`flex-1 py-2 text-[13px] font-semibold text-center transition-colors ${tab === t ? "text-white" : "text-white/40"}`}
-            >{t === "feed" ? "피드" : "맛집러"}</button>
-          ))}
-          <div className="absolute bottom-0 h-[1px] bg-white transition-all duration-300"
-            style={{ width: "50%", left: tab === "feed" ? "0" : "50%" }} />
-        </div>
-      </header>
+    <div className="relative w-full h-screen overflow-hidden bg-neutral-900">
+      {/* Map grid background */}
+      <div className="absolute inset-0">
+        {/* Grid lines */}
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={`h-${i}`} className="absolute w-full h-px bg-white/[0.04]" style={{ top: `${(i + 1) * 8}%` }} />
+        ))}
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={`v-${i}`} className="absolute h-full w-px bg-white/[0.04]" style={{ left: `${(i + 1) * 12.5}%` }} />
+        ))}
+        {/* Subtle area labels */}
+        <span className="absolute top-[20%] left-[15%] text-[10px] text-white/[0.08] font-medium">연남동</span>
+        <span className="absolute top-[35%] left-[50%] text-[10px] text-white/[0.08] font-medium">을지로</span>
+        <span className="absolute top-[60%] left-[70%] text-[10px] text-white/[0.08] font-medium">성수동</span>
+        <span className="absolute top-[25%] left-[40%] text-[10px] text-white/[0.08] font-medium">종로</span>
+        <span className="absolute top-[50%] left-[25%] text-[10px] text-white/[0.08] font-medium">홍대</span>
+      </div>
 
-      {tab === "feed" ? (
-        <div className="divide-y divide-white/5">
-          {posts.map((post) => <FeedCard key={post.id} post={post} />)}
-        </div>
-      ) : (
-        <div>
-          {/* View mode toggle */}
-          <div className="flex gap-2 px-4 py-3">
-            <button onClick={() => { setViewMode("individual"); setSelectedPin(null); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-colors ${
-                viewMode === "individual" ? "bg-white text-black" : "bg-white/10 text-white/60"
-              }`}>
-              <User size={14} /> 유저별
-            </button>
-            <button onClick={() => { setViewMode("all"); setSelectedUser(null); setSelectedPin(null); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-colors ${
-                viewMode === "all" ? "bg-white text-black" : "bg-white/10 text-white/60"
-              }`}>
-              <Users size={14} /> 한눈에 보기
-            </button>
+      {/* Header overlay */}
+      <div className="absolute top-0 left-0 right-0 z-20 pt-[env(safe-area-inset-top,12px)]">
+        <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h1 className="text-[22px] font-bold italic text-white">Bites</h1>
+            <div className="flex items-center gap-1 text-white/50">
+              <Navigation size={12} />
+              <span className="text-[12px]">서울</span>
+            </div>
           </div>
+          <button
+            onClick={() => setShowAll(!showAll)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm"
+          >
+            {showAll ? <Eye size={14} className="text-white/70" /> : <EyeOff size={14} className="text-[#FF6B35]" />}
+            <span className="text-[11px] text-white/70">{showAll ? "전체" : "필터"}</span>
+          </button>
+        </div>
 
-          {viewMode === "all" ? (
-            /* === ALL USERS MAP === */
-            <div>
-              {/* Big map with all pins, color-coded */}
-              <div className="relative w-full aspect-[1/1] bg-neutral-900 mx-0 overflow-hidden">
-                {/* Grid */}
-                {[15,30,45,60,75].map(p => <div key={`h${p}`} className="absolute h-px bg-white/5" style={{top:`${p}%`,left:0,right:0}} />)}
-                {[20,40,60,80].map(p => <div key={`v${p}`} className="absolute w-px bg-white/5" style={{left:`${p}%`,top:0,bottom:0}} />)}
+        {/* Category filter chips */}
+        <div className="flex gap-2 px-4 pb-3 overflow-x-auto hide-scrollbar">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-3.5 py-1.5 rounded-full text-[12px] font-medium whitespace-nowrap transition-all ${
+                selectedCategory === cat
+                  ? "bg-[#FF6B35] text-white"
+                  : "bg-white/10 text-white/50 backdrop-blur-sm"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      </div>
 
-                {/* All pins */}
-                {mockPostsExtended.map(post => {
-                  const pos = pinPosition(post);
-                  const color = userColors[post.user] || "#FF6B35";
-                  const isSelected = selectedPin?.id === post.id;
-                  return (
-                    <button key={post.id} onClick={() => setSelectedPin(isSelected ? null : post)}
-                      className="absolute -translate-x-1/2 -translate-y-1/2 transition-all" style={pos}>
-                      <div className={`flex items-center justify-center rounded-full transition-all ${
-                        isSelected ? "w-12 h-12 text-[20px]" : "w-9 h-9 text-[15px]"
-                      }`} style={{
-                        backgroundColor: color,
-                        boxShadow: isSelected ? `0 0 20px ${color}80` : `0 0 8px ${color}40`,
-                      }}>
-                        {emoji(post.rating)}
-                      </div>
-                      {/* User initial label */}
-                      <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] text-white/50 font-medium whitespace-nowrap">
-                        {mockUsers.find(u => u.username === post.user)?.name?.charAt(0)}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+      {/* Map pins */}
+      {filtered.map((post) => {
+        const pos = toPercent(post.lat, post.lng);
+        const color = userColors[post.user] || "#FF6B35";
+        const isSelected = selectedPin === post.id;
+        return (
+          <button
+            key={post.id}
+            onClick={() => setSelectedPin(isSelected ? null : post.id)}
+            className="absolute z-10 flex flex-col items-center transition-transform"
+            style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: "translate(-50%, -50%)" }}
+          >
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center text-[18px] transition-all ${
+                isSelected ? "scale-125" : "scale-100"
+              }`}
+              style={{
+                backgroundColor: color,
+                boxShadow: `0 0 ${isSelected ? 20 : 12}px ${color}60`,
+              }}
+            >
+              {ratingEmoji[post.rating]}
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={post.avatar}
+              alt={post.user}
+              className="w-4 h-4 rounded-full border border-black mt-0.5"
+            />
+          </button>
+        );
+      })}
 
-              {/* Legend */}
-              <div className="flex gap-3 px-4 py-3 flex-wrap">
-                {mockUsers.map((user, i) => {
-                  const count = mockPostsExtended.filter(p => p.user === user.username).length;
-                  return (
-                    <div key={user.username} className="flex items-center gap-1.5">
-                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: userColorList[i] }} />
-                      <span className="text-[11px] text-white/60">{user.name} ({count})</span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Selected pin card */}
-              {selectedPin && (
-                <div className="mx-4 mb-3 bg-neutral-800 rounded-xl p-3 flex gap-3 animate-slideUp border border-white/10">
-                  <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
-                    <Image src={selectedPin.image} alt={selectedPin.place} fill className="object-cover" unoptimized />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-[14px] font-bold truncate">{selectedPin.place}</p>
-                      <span>{emoji(selectedPin.rating)}</span>
-                    </div>
-                    <p className="text-[11px] text-white/40 mt-0.5">{selectedPin.area} · by {selectedPin.user}</p>
-                    <p className="text-[12px] text-white/60 mt-1 truncate">{selectedPin.review}</p>
-                  </div>
+      {/* User filter row — bottom */}
+      <div className="absolute bottom-[70px] left-0 right-0 z-20 px-4">
+        <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
+          {mockUsers.map((u) => {
+            const color = userColors[u.username] || "#FF6B35";
+            const active = selectedUser === u.username;
+            return (
+              <button
+                key={u.username}
+                onClick={() => {
+                  setSelectedUser(active ? null : u.username);
+                  if (showAll) setShowAll(false);
+                }}
+                className="flex flex-col items-center gap-1 shrink-0"
+              >
+                <div
+                  className={`w-10 h-10 rounded-full p-0.5 transition-all ${active ? "scale-110" : "opacity-60"}`}
+                  style={{ border: `2px solid ${active ? color : "rgba(255,255,255,0.2)"}` }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={u.avatar} alt={u.username} className="w-full h-full rounded-full" />
                 </div>
-              )}
+                <span className={`text-[10px] ${active ? "text-white" : "text-white/40"}`}>
+                  {u.name}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-              {/* Shared spots indicator */}
-              {(() => {
-                // Find spots where multiple users posted nearby
-                const areas = new Map<string, string[]>();
-                mockPostsExtended.forEach(p => {
-                  const users = areas.get(p.area) || [];
-                  if (!users.includes(p.user)) users.push(p.user);
-                  areas.set(p.area, users);
-                });
-                const shared = Array.from(areas.entries()).filter(([, u]) => u.length > 1);
-                if (shared.length === 0) return null;
-                return (
-                  <div className="px-4 pb-3">
-                    <p className="text-[12px] text-white/40 mb-2">🔥 공통 지역</p>
-                    {shared.map(([area, users]) => (
-                      <div key={area} className="flex items-center gap-2 py-1.5">
-                        <span className="text-[13px] font-medium">{area}</span>
-                        <div className="flex -space-x-1">
-                          {users.map(u => (
-                            <div key={u} className="w-4 h-4 rounded-full border border-black"
-                              style={{ backgroundColor: userColors[u] || "#FF6B35" }} />
-                          ))}
-                        </div>
-                        <span className="text-[11px] text-white/30">{users.length}명</span>
-                      </div>
-                    ))}
-                  </div>
-                );
-              })()}
+      {/* Selected pin card — slide up */}
+      {selectedPost && (
+        <div className="absolute bottom-[130px] left-4 right-4 z-30 animate-slideUp">
+          <div className="bg-neutral-900/95 backdrop-blur-xl rounded-2xl border border-white/10 p-3 flex gap-3">
+            <Image
+              src={selectedPost.image}
+              alt={selectedPost.place}
+              width={80}
+              height={80}
+              className="w-20 h-20 rounded-lg object-cover shrink-0"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-[15px] font-bold text-white truncate">{selectedPost.place}</h3>
+                  <p className="text-[11px] text-white/40">{selectedPost.area}</p>
+                </div>
+                <button onClick={() => setSelectedPin(null)} className="p-1">
+                  <X size={16} className="text-white/40" />
+                </button>
+              </div>
+              <p className="text-[13px] text-white/70 mt-1 truncate">{selectedPost.review}</p>
+              <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center gap-1.5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={selectedPost.avatar} alt="" className="w-4 h-4 rounded-full" />
+                  <span className="text-[11px] text-white/50">{selectedPost.user}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Heart size={12} className="text-white/40" />
+                  <span className="text-[11px] text-white/40">{selectedPost.likes}</span>
+                </div>
+              </div>
             </div>
-          ) : (
-            /* === INDIVIDUAL USER VIEW === */
-            <div>
-              {/* User cards with mini maps */}
-              {mockUsers.map((user, idx) => {
-                const userPosts = mockPostsExtended.filter(p => p.user === user.username);
-                const isExpanded = selectedUser === user.username;
-                const color = userColorList[idx];
-
-                return (
-                  <div key={user.username} className="border-b border-white/5">
-                    {/* User header */}
-                    <button onClick={() => { setSelectedUser(isExpanded ? null : user.username); setSelectedPin(null); }}
-                      className="w-full flex items-center gap-3 px-4 py-3 active:bg-white/5 transition-colors">
-                      <div className="w-11 h-11 rounded-full p-[2px]" style={{ background: `linear-gradient(135deg, ${color}, ${color}88)` }}>
-                        <Image src={user.avatar} alt={user.name} width={40} height={40}
-                          className="rounded-full bg-neutral-800 w-full h-full" unoptimized />
-                      </div>
-                      <div className="flex-1 text-left min-w-0">
-                        <p className="text-[14px] font-semibold">{user.name}</p>
-                        <p className="text-[12px] text-white/40">{user.bio}</p>
-                      </div>
-                      <span className="text-[13px] font-bold" style={{ color }}>{userPosts.length}곳</span>
-                      <ChevronRight size={16} className={`text-white/20 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
-                    </button>
-
-                    {/* Mini map always visible (compact) */}
-                    {!isExpanded && (
-                      <div className="relative h-[80px] mx-4 mb-3 bg-neutral-900 rounded-lg overflow-hidden"
-                        onClick={() => { setSelectedUser(user.username); setSelectedPin(null); }}>
-                        {userPosts.map(post => {
-                          const pos = pinPosition(post);
-                          return (
-                            <div key={post.id} className="absolute -translate-x-1/2 -translate-y-1/2" style={pos}>
-                              <div className="w-6 h-6 rounded-full flex items-center justify-center text-[12px]"
-                                style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}60` }}>
-                                {emoji(post.rating)}
-                              </div>
-                            </div>
-                          );
-                        })}
-                        <div className="absolute bottom-1.5 right-2 text-[10px] text-white/30">탭하여 자세히 보기</div>
-                      </div>
-                    )}
-
-                    {/* Expanded view */}
-                    {isExpanded && (
-                      <div className="animate-slideUp">
-                        {/* Big map */}
-                        <div className="relative w-full aspect-[2/1] bg-neutral-900 overflow-hidden">
-                          {[25,50,75].map(p => <div key={`h${p}`} className="absolute h-px bg-white/5" style={{top:`${p}%`,left:0,right:0}} />)}
-                          {[25,50,75].map(p => <div key={`v${p}`} className="absolute w-px bg-white/5" style={{left:`${p}%`,top:0,bottom:0}} />)}
-                          {userPosts.map(post => {
-                            const pos = pinPosition(post);
-                            const isSel = selectedPin?.id === post.id;
-                            return (
-                              <button key={post.id} onClick={() => setSelectedPin(isSel ? null : post)}
-                                className="absolute -translate-x-1/2 -translate-y-1/2 transition-all" style={pos}>
-                                <div className={`rounded-full flex items-center justify-center transition-all ${
-                                  isSel ? "w-11 h-11 text-[18px]" : "w-8 h-8 text-[15px]"
-                                }`} style={{
-                                  backgroundColor: color,
-                                  boxShadow: isSel ? `0 0 16px ${color}80` : `0 0 8px ${color}40`,
-                                }}>
-                                  {emoji(post.rating)}
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-
-                        {/* Selected pin */}
-                        {selectedPin && selectedPin.user === user.username && (
-                          <div className="mx-4 mt-2 bg-neutral-800 rounded-xl p-3 flex gap-3 border border-white/10 animate-slideUp">
-                            <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
-                              <Image src={selectedPin.image} alt={selectedPin.place} fill className="object-cover" unoptimized />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-[14px] font-bold">{selectedPin.place} {emoji(selectedPin.rating)}</p>
-                              <p className="text-[11px] text-white/40 mt-0.5">{selectedPin.area}</p>
-                              <p className="text-[12px] text-white/60 mt-1">{selectedPin.review}</p>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Post list */}
-                        <div className="mt-2 mb-2">
-                          {userPosts.map(post => (
-                            <button key={post.id} onClick={() => setSelectedPin(post)}
-                              className="w-full flex items-center gap-3 px-4 py-2.5 active:bg-white/5 transition-colors text-left">
-                              <div className="relative w-11 h-11 rounded-lg overflow-hidden flex-shrink-0">
-                                <Image src={post.image} alt={post.place} fill className="object-cover" unoptimized />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-[13px] font-semibold truncate">{post.place}</p>
-                                <p className="text-[11px] text-white/40 truncate">{post.area} · {post.review}</p>
-                              </div>
-                              <div className="flex items-center gap-1 text-white/30">
-                                <Heart size={12} strokeWidth={1.5} />
-                                <span className="text-[11px]">{post.likes}</span>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          </div>
         </div>
       )}
     </div>
