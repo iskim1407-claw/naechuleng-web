@@ -1,20 +1,24 @@
 "use client";
 import { useEffect, useRef } from "react";
 import type { Post } from "@/data/mock";
+import type { Restaurant } from "@/lib/supabase";
 
 interface Props {
   posts: Post[];
   userColors: Record<string, string>;
   selectedPin: number | null;
   onPinClick: (id: number) => void;
+  restaurants?: Restaurant[];
 }
 
-export default function MapView({ posts, userColors, selectedPin, onPinClick }: Props) {
+export default function MapView({ posts, userColors, selectedPin, onPinClick, restaurants = [] }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapInstanceRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markersRef = useRef<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const restaurantMarkersRef = useRef<any[]>([]);
 
   useEffect(() => {
     if (!mapRef.current || typeof window === "undefined") return;
@@ -114,6 +118,56 @@ export default function MapView({ posts, userColors, selectedPin, onPinClick }: 
       markersRef.current.push(marker);
     });
   }
+
+  // Restaurant markers from DB
+  useEffect(() => {
+    if (!mapInstanceRef.current || restaurants.length === 0) return;
+    import("leaflet").then((L) => {
+      // Clear old restaurant markers
+      restaurantMarkersRef.current.forEach((m) => mapInstanceRef.current.removeLayer(m));
+      restaurantMarkersRef.current = [];
+
+      restaurants.forEach((r) => {
+        if (!r.lat || !r.lng) return;
+        const icon = L.divIcon({
+          className: "",
+          iconSize: [32, 44],
+          iconAnchor: [16, 44],
+          html: `
+            <div style="display:flex;flex-direction:column;align-items:center;cursor:pointer;">
+              <div style="
+                width:32px;height:32px;
+                border-radius:50%;
+                background:#FF6B35;
+                border:2px solid #FF6B35;
+                display:flex;align-items:center;justify-content:center;
+                box-shadow:0 0 8px rgba(255,107,53,0.5);
+                font-size:16px;
+              ">🍽️</div>
+              <div style="
+                margin-top:2px;padding:1px 6px;
+                background:rgba(0,0,0,0.75);border-radius:4px;
+                font-size:10px;color:rgba(255,255,255,0.85);
+                white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis;
+                backdrop-filter:blur(4px);
+              ">${r.name}</div>
+            </div>
+          `,
+        });
+
+        const marker = L.marker([r.lat, r.lng], { icon }).addTo(mapInstanceRef.current);
+        marker.bindPopup(`
+          <div style="font-size:13px;min-width:120px;">
+            <strong>${r.name}</strong><br/>
+            <span style="color:#888;">${r.category} · ${r.area}</span>
+            ${r.rating ? `<br/>⭐ ${Number(r.rating).toFixed(1)}` : ""}
+          </div>
+        `);
+        restaurantMarkersRef.current.push(marker);
+      });
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurants]);
 
   return <div ref={mapRef} style={{ width: "100%", height: "100%" }} />;
 }

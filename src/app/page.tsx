@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Navigation, Eye, EyeOff, Heart, Bookmark, Settings, Grid3X3, MapPin, Search } from "lucide-react";
 import { mockPostsExtended, mockUsers, mockUser } from "@/data/mock";
+import type { Restaurant } from "@/lib/supabase";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import BottomSheet from "@/components/BottomSheet";
@@ -34,12 +35,38 @@ const battles = [
 ];
 
 // === Feed Tab ===
-function FeedContent() {
+function FeedContent({ restaurants }: { restaurants: Restaurant[] }) {
   const [likedIds, setLikedIds] = useState<Set<number>>(new Set());
   const [savedIds, setSavedIds] = useState<Set<number>>(new Set());
 
+  // Show DB restaurants if available, then mock posts below
   return (
     <div className="space-y-5 pb-8">
+      {restaurants.length > 0 && restaurants.map((r) => (
+        <div key={r.id} className="animate-slideUp">
+          <div className="relative aspect-[16/10] rounded-xl overflow-hidden">
+            {r.image_url ? (
+              <Image src={r.image_url} alt={r.name} fill className="object-cover" unoptimized />
+            ) : (
+              <div className="w-full h-full bg-neutral-800 flex items-center justify-center text-white/30 text-3xl">🍽️</div>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            <div className="absolute bottom-3 left-3">
+              <h3 className="text-[15px] font-bold text-white leading-tight">{r.name}</h3>
+              <p className="text-[11px] text-white/60">{r.area} · {r.category}</p>
+            </div>
+            {r.rating && (
+              <div className="absolute top-3 right-3 px-2 py-1 rounded-full bg-black/50 backdrop-blur-sm text-[12px] text-white font-bold">
+                ⭐ {Number(r.rating).toFixed(1)}
+              </div>
+            )}
+          </div>
+          <div className="flex items-center justify-between mt-2">
+            <p className="text-[12px] text-white/50 truncate">{r.address}</p>
+            {r.review_count > 0 && <span className="text-[11px] text-white/40">리뷰 {r.review_count}개</span>}
+          </div>
+        </div>
+      ))}
       {mockPostsExtended.map((post) => {
         const liked = likedIds.has(post.id);
         const saved = savedIds.has(post.id);
@@ -247,8 +274,16 @@ export default function MapHome() {
   const [showAll, setShowAll] = useState(true);
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState("feed");
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    fetch("/api/restaurants")
+      .then((res) => res.ok ? res.json() : Promise.reject("fetch failed"))
+      .then((data: Restaurant[]) => setRestaurants(data))
+      .catch(() => { /* fallback: restaurants stays empty, mock data used */ });
+  }, []);
 
   const filtered = mockPostsExtended.filter((p) => {
     if (selectedCategory !== "전체" && p.category !== selectedCategory) return false;
@@ -267,6 +302,7 @@ export default function MapHome() {
           userColors={userColors}
           selectedPin={selectedPin}
           onPinClick={(id) => setSelectedPin(selectedPin === id ? null : id)}
+          restaurants={restaurants}
         />
       )}
 
@@ -348,7 +384,7 @@ export default function MapHome() {
 
       {/* Bottom Sheet with tabs */}
       <BottomSheet activeTab={activeTab} onTabChange={setActiveTab}>
-        {activeTab === "feed" && <FeedContent />}
+        {activeTab === "feed" && <FeedContent restaurants={restaurants} />}
         {activeTab === "discover" && <DiscoverContent />}
         {activeTab === "profile" && <ProfileContent />}
       </BottomSheet>
