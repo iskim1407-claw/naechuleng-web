@@ -283,6 +283,7 @@ export default function MapHome() {
     if (selectedCategory !== "전체") params.set("category", selectedCategory);
     fetch(`/api/restaurants?${params}`)
       .then((res) => res.ok ? res.json() : Promise.reject("fetch failed"))
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .then((json: any) => setRestaurants(Array.isArray(json) ? json : json.data || []))
       .catch(() => { /* fallback: restaurants stays empty, mock data used */ });
   }, [selectedCategory]);
