@@ -6,16 +6,21 @@ export async function GET(request: NextRequest) {
   const area = searchParams.get("area");
   const category = searchParams.get("category");
 
-  let query = supabase.from("restaurants").select("*");
+  const limit = parseInt(searchParams.get("limit") || "200");
+  const offset = parseInt(searchParams.get("offset") || "0");
+
+  let query = supabase.from("restaurants").select("*", { count: "exact" });
 
   if (area) query = query.eq("area", area);
   if (category) query = query.eq("category", category);
 
-  const { data, error } = await query;
+  query = query.range(offset, offset + limit - 1);
+
+  const { data, error, count } = await query;
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(data);
+  return NextResponse.json({ data, count, limit, offset });
 }

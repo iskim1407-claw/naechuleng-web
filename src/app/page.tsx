@@ -279,11 +279,13 @@ export default function MapHome() {
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
-    fetch("/api/restaurants")
+    const params = new URLSearchParams({ limit: "500" });
+    if (selectedCategory !== "전체") params.set("category", selectedCategory);
+    fetch(`/api/restaurants?${params}`)
       .then((res) => res.ok ? res.json() : Promise.reject("fetch failed"))
-      .then((data: Restaurant[]) => setRestaurants(data))
+      .then((json: any) => setRestaurants(Array.isArray(json) ? json : json.data || []))
       .catch(() => { /* fallback: restaurants stays empty, mock data used */ });
-  }, []);
+  }, [selectedCategory]);
 
   const filtered = mockPostsExtended.filter((p) => {
     if (selectedCategory !== "전체" && p.category !== selectedCategory) return false;
